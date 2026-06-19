@@ -9,13 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TodosRouteImport } from './routes/todos'
 import { Route as MetragemRouteImport } from './routes/metragem'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AlterarRouteImport } from './routes/alterar'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TodosRoute = TodosRouteImport.update({
+  id: '/todos',
+  path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MetragemRoute = MetragemRouteImport.update({
   id: '/metragem',
   path: '/metragem',
@@ -41,6 +48,11 @@ const AlterarRoute = AlterarRouteImport.update({
   path: '/alterar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -49,61 +61,88 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/alterar': typeof AlterarRoute
   '/cadastro': typeof CadastroRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
+  '/todos': typeof TodosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/alterar': typeof AlterarRoute
   '/cadastro': typeof CadastroRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
+  '/todos': typeof TodosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/alterar': typeof AlterarRoute
   '/cadastro': typeof CadastroRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
+  '/todos': typeof TodosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/alterar'
     | '/cadastro'
     | '/historico'
     | '/login'
     | '/metragem'
+    | '/todos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alterar' | '/cadastro' | '/historico' | '/login' | '/metragem'
+  to:
+    | '/'
+    | '/admin'
+    | '/alterar'
+    | '/cadastro'
+    | '/historico'
+    | '/login'
+    | '/metragem'
+    | '/todos'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/alterar'
     | '/cadastro'
     | '/historico'
     | '/login'
     | '/metragem'
+    | '/todos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AlterarRoute: typeof AlterarRoute
   CadastroRoute: typeof CadastroRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   MetragemRoute: typeof MetragemRoute
+  TodosRoute: typeof TodosRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/todos': {
+      id: '/todos'
+      path: '/todos'
+      fullPath: '/todos'
+      preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/metragem': {
       id: '/metragem'
       path: '/metragem'
@@ -139,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlterarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -151,11 +197,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AlterarRoute: AlterarRoute,
   CadastroRoute: CadastroRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   MetragemRoute: MetragemRoute,
+  TodosRoute: TodosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
