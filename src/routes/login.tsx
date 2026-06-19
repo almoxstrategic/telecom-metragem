@@ -53,13 +53,15 @@ function LoginPage() {
           className="mt-10 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Usuário / Matrícula</label>
+            <label className="mb-1.5 block text-sm font-semibold">Usuário</label>
             <input
-              inputMode="numeric"
-              pattern="[0-9]*"
+              type="text"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               value={matricula}
               onChange={(e) => setMatricula(e.target.value)}
-              placeholder="000000"
+              placeholder="nome.sobrenome"
               className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               required
             />
