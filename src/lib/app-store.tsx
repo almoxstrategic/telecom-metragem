@@ -54,8 +54,10 @@ const MOCK_RECORDS: EvidenceRecord[] = [
   },
 ];
 
+const MOCK_USER: User = { nome: "Técnico 1234", matricula: "1234" };
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>(MOCK_USER);
   const [records, setRecords] = useState<EvidenceRecord[]>(MOCK_RECORDS);
 
   useEffect(() => {
