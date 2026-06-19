@@ -32,7 +32,7 @@ function dayKey(iso: string) {
 }
 
 function HistoricoPage() {
-  const { records } = useApp();
+  const { myRecords: records } = useApp();
   const [filterDate, setFilterDate] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -99,7 +99,10 @@ function HistoricoPage() {
           <div className="space-y-6">
             {grouped.map(([k, items]) => (
               <section key={k}>
-                <h2 className="mb-2 px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <h2
+                  suppressHydrationWarning
+                  className="mb-2 px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                >
                   {formatDayLabel(items[0].createdAt)}
                 </h2>
                 <ul className="space-y-2">
@@ -126,8 +129,11 @@ function HistoricoPage() {
                                 })}
                               </span>
                             </div>
-                            <div className="mt-1 truncate text-sm font-medium">
-                              Contrato {r.contrato}
+                            <div className="mt-1 flex items-center gap-2 truncate text-sm font-medium">
+                              <span>Contrato {r.contrato}</span>
+                              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                                {r.metragemTotal} m
+                              </span>
                             </div>
                           </div>
                           <ChevronDown
