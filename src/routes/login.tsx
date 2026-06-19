@@ -85,6 +85,15 @@ function LoginPage() {
             <LogIn className="h-5 w-5" />
             {loading ? "Entrando..." : "Entrar"}
           </button>
+
+          <div className="flex flex-col items-center gap-2 pt-2 text-sm">
+            <Link to="/alterar" className="font-medium text-primary hover:underline">
+              Esqueci minha senha
+            </Link>
+            <Link to="/cadastro" className="font-medium text-primary hover:underline">
+              Primeiro acesso? Cadastre-se
+            </Link>
+          </div>
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">

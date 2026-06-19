@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as MetragemRouteImport } from './routes/metragem'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as AlterarRouteImport } from './routes/alterar'
 import { Route as IndexRouteImport } from './routes/index'
 
 const MetragemRoute = MetragemRouteImport.update({
@@ -29,6 +31,16 @@ const HistoricoRoute = HistoricoRouteImport.update({
   path: '/historico',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlterarRoute = AlterarRouteImport.update({
+  id: '/alterar',
+  path: '/alterar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +49,16 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/alterar': typeof AlterarRoute
+  '/cadastro': typeof CadastroRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/alterar': typeof AlterarRoute
+  '/cadastro': typeof CadastroRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
@@ -50,20 +66,37 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/alterar': typeof AlterarRoute
+  '/cadastro': typeof CadastroRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/historico' | '/login' | '/metragem'
+  fullPaths:
+    | '/'
+    | '/alterar'
+    | '/cadastro'
+    | '/historico'
+    | '/login'
+    | '/metragem'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/historico' | '/login' | '/metragem'
-  id: '__root__' | '/' | '/historico' | '/login' | '/metragem'
+  to: '/' | '/alterar' | '/cadastro' | '/historico' | '/login' | '/metragem'
+  id:
+    | '__root__'
+    | '/'
+    | '/alterar'
+    | '/cadastro'
+    | '/historico'
+    | '/login'
+    | '/metragem'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AlterarRoute: typeof AlterarRoute
+  CadastroRoute: typeof CadastroRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   MetragemRoute: typeof MetragemRoute
@@ -92,6 +125,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoricoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alterar': {
+      id: '/alterar'
+      path: '/alterar'
+      fullPath: '/alterar'
+      preLoaderRoute: typeof AlterarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +151,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AlterarRoute: AlterarRoute,
+  CadastroRoute: CadastroRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   MetragemRoute: MetragemRoute,
@@ -111,13 +160,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
