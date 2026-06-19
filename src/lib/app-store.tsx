@@ -12,7 +12,7 @@ export type EvidenceRecord = {
 export type User = { nome: string; matricula: string };
 
 type AppState = {
-  user: User | null;
+  user: User;
   records: EvidenceRecord[];
   login: (matricula: string, senha: string) => boolean;
   logout: () => void;
@@ -78,7 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    setUser(null);
+    setUser(MOCK_USER);
     try {
       localStorage.removeItem("estrategic_user");
     } catch {}
