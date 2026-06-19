@@ -6,9 +6,6 @@ export function Logo({ className = "" }: { className?: string }) {
       </div>
       <div className="leading-tight">
         <div className="font-black tracking-tight text-foreground">Estrategic</div>
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Telecom Field
-        </div>
       </div>
     </div>
   );

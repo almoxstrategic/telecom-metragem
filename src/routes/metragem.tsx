@@ -58,8 +58,6 @@ function MetragemPage() {
     }, 500);
   };
 
-  if (!user) return null;
-
   return (
     <div className="min-h-screen bg-surface">
       <AppHeader />
@@ -70,6 +68,13 @@ function MetragemPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Link>
+
+        <section className="mb-5">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Olá, {user.nome}</span>{" "}
+            Escolha um módulo para iniciar seu registro.
+          </p>
+        </section>
 
         <header className="mb-6">
           <h1 className="text-2xl font-black tracking-tight">Evidência de Metragem</h1>

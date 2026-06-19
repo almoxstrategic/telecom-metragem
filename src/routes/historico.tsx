@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { ArrowLeft, AlertTriangle, ChevronDown, FileText, Calendar } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { useApp, type EvidenceRecord } from "@/lib/app-store";
@@ -32,14 +32,9 @@ function dayKey(iso: string) {
 }
 
 function HistoricoPage() {
-  const { user, records } = useApp();
-  const navigate = useNavigate();
+  const { records } = useApp();
   const [filterDate, setFilterDate] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) navigate({ to: "/login" });
-  }, [user, navigate]);
 
   const grouped = useMemo(() => {
     const filtered = filterDate
@@ -53,8 +48,6 @@ function HistoricoPage() {
     }
     return Array.from(map.entries()).sort(([a], [b]) => (a < b ? 1 : -1));
   }, [records, filterDate]);
-
-  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-surface">
