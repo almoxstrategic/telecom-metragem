@@ -61,7 +61,7 @@ function MetragemPage() {
   return (
     <div className="min-h-screen bg-surface">
       <AppHeader />
-      <main className="mx-auto max-w-2xl px-5 pb-24 pt-4">
+      <main className="mx-auto max-w-2xl px-5 pb-40 pt-4">
         <Link
           to="/"
           className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -83,7 +83,7 @@ function MetragemPage() {
           </p>
         </header>
 
-        <form onSubmit={onSubmit} className="space-y-5">
+        <form id="metragem-form" onSubmit={onSubmit} className="space-y-5">
           <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div>
               <label className="mb-1.5 block text-sm font-semibold">Número do Contrato</label>
@@ -115,17 +115,22 @@ function MetragemPage() {
             <PhotoUpload label="📸 Foto do Início" value={fotoInicio} onChange={setFotoInicio} />
             <PhotoUpload label="📸 Foto do Fim" value={fotoFim} onChange={setFotoFim} />
           </div>
+        </form>
+      </main>
 
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-5 pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur">
+        <div className="mx-auto max-w-2xl">
           <button
             type="submit"
+            form="metragem-form"
             disabled={!canSubmit}
-            className="sticky bottom-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-base font-semibold text-primary-foreground shadow-lg transition hover:bg-primary-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
           >
             <Send className="h-5 w-5" />
             {submitting ? "Enviando..." : "Enviar Evidência"}
           </button>
-        </form>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }
