@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Search, Calendar as CalendarIcon, ChevronDown, FileText, X } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
-import { ADMIN_RECORDS } from "@/lib/admin-records";
+import { useApp } from "@/lib/app-store";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -23,13 +23,14 @@ function fmtDate(d: Date) {
 }
 
 function TodosPage() {
+  const { records } = useApp();
   const [query, setQuery] = useState("");
   const [range, setRange] = useState<DateRange | undefined>();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return ADMIN_RECORDS.filter((r) => {
+    return records.filter((r) => {
       const matchQ =
         !q ||
         r.tecnico.toLowerCase().includes(q) ||
@@ -46,7 +47,7 @@ function TodosPage() {
       const matchD = !from || (date >= from && (!to || date <= to));
       return matchQ && matchD;
     }).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-  }, [query, range]);
+  }, [records, query, range]);
 
   const rangeLabel = range?.from
     ? range.to && range.to.getTime() !== range.from.getTime()
@@ -148,6 +149,9 @@ function TodosPage() {
                         <span className="text-xs font-semibold text-foreground">{r.tecnico}</span>
                         <span className="text-[11px] text-muted-foreground">
                           Matr. {r.matricula}
+                        </span>
+                        <span className="ml-auto rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                          {r.metragemTotal} m
                         </span>
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
