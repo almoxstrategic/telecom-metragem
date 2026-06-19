@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ClipboardList, LogOut, Home } from "lucide-react";
+import { ClipboardList, LogOut, Home, ShieldCheck, Database } from "lucide-react";
 import { Logo } from "./Logo";
 import { useApp } from "@/lib/app-store";
 
@@ -44,6 +44,28 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         >
           <ClipboardList className="h-5 w-5 text-primary" />
           Meus Registros
+        </Link>
+
+        <div className="mt-4 px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Administração
+        </div>
+        <Link
+          to="/admin"
+          onClick={onNavigate}
+          className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
+          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+        >
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          Painel Admin
+        </Link>
+        <Link
+          to="/todos"
+          onClick={onNavigate}
+          className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
+          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+        >
+          <Database className="h-5 w-5 text-primary" />
+          Todas as Metragens
         </Link>
       </div>
 
