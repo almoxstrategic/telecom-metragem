@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, Send, CheckCircle2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowLeft, Send, CheckCircle2, Ruler } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { useApp } from "@/lib/app-store";
@@ -20,15 +20,35 @@ function MetragemPage() {
   const { user, addRecord } = useApp();
   const [contrato, setContrato] = useState("");
   const [wo, setWo] = useState("");
+  const [metInicial, setMetInicial] = useState("");
+  const [metFinal, setMetFinal] = useState("");
   const [fotoInicio, setFotoInicio] = useState<string | null>(null);
   const [fotoFim, setFotoFim] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = contrato.trim() && wo.trim() && fotoInicio && fotoFim && !submitting;
+  const mi = parseFloat(metInicial);
+  const mf = parseFloat(metFinal);
+  const total = useMemo(() => {
+    if (Number.isFinite(mi) && Number.isFinite(mf)) return mf - mi;
+    return null;
+  }, [mi, mf]);
+  const totalValid = total !== null && total >= 0;
+
+  const canSubmit =
+    contrato.trim() &&
+    wo.trim() &&
+    metInicial.trim() &&
+    metFinal.trim() &&
+    totalValid &&
+    fotoInicio &&
+    fotoFim &&
+    !submitting;
 
   const reset = () => {
     setContrato("");
     setWo("");
+    setMetInicial("");
+    setMetFinal("");
     setFotoInicio(null);
     setFotoFim(null);
   };
@@ -42,10 +62,12 @@ function MetragemPage() {
         addRecord({
           contrato: contrato.trim(),
           wo: wo.trim(),
+          metragemInicial: mi,
+          metragemFinal: mf,
           fotoInicio: fotoInicio!,
           fotoFim: fotoFim!,
         });
-        toast.success(`Registrado metragem da WO ${wo.trim()}`, {
+        toast.success(`Registrado metragem da WO ${wo.trim()} (${total} m)`, {
           icon: <CheckCircle2 className="h-5 w-5" />,
           className: "!bg-success !text-success-foreground !border-success",
         });
@@ -79,7 +101,7 @@ function MetragemPage() {
         <header className="mb-6">
           <h1 className="text-2xl font-black tracking-tight">Evidência de Metragem</h1>
           <p className="text-sm text-muted-foreground">
-            Informe a WO e registre as fotos de início e fim.
+            Informe a WO, a metragem e registre as fotos de início e fim.
           </p>
         </header>
 
@@ -108,6 +130,55 @@ function MetragemPage() {
                 className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 required
               />
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold">Metragem Inicial</label>
+                <input
+                  inputMode="decimal"
+                  value={metInicial}
+                  onChange={(e) => setMetInicial(e.target.value.replace(",", ".").replace(/[^0-9.]/g, ""))}
+                  placeholder="0"
+                  className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold">Metragem Final</label>
+                <input
+                  inputMode="decimal"
+                  value={metFinal}
+                  onChange={(e) => setMetFinal(e.target.value.replace(",", ".").replace(/[^0-9.]/g, ""))}
+                  placeholder="0"
+                  className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  required
+                />
+              </div>
+            </div>
+
+            <div
+              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
+                total === null
+                  ? "border-dashed border-border bg-surface text-muted-foreground"
+                  : totalValid
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-destructive/40 bg-destructive/10 text-destructive"
+              }`}
+            >
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Ruler className="h-5 w-5" />
+                Total Utilizado
+              </div>
+              <div className="text-lg font-black">
+                {total === null
+                  ? "— m"
+                  : totalValid
+                    ? `${total} metros`
+                    : "Valor inválido"}
+              </div>
             </div>
           </div>
 
