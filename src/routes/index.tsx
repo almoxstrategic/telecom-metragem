@@ -1,5 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Ruler, ClipboardList, Lock } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { useApp } from "@/lib/app-store";
@@ -40,13 +39,6 @@ const MODULES: ModuleCard[] = [
 
 function HomePage() {
   const { user } = useApp();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user) navigate({ to: "/login" });
-  }, [user, navigate]);
-
-  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-surface">
@@ -54,7 +46,7 @@ function HomePage() {
       <main className="mx-auto max-w-2xl px-5 pb-10 pt-6">
         <section className="mb-6">
           <div className="text-sm text-muted-foreground">Olá,</div>
-          <h1 className="text-2xl font-black tracking-tight">{user.nome} 👋</h1>
+          <h1 className="text-2xl font-black tracking-tight">{user.nome}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Escolha um módulo para iniciar seu registro.
           </p>

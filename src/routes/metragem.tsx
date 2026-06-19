@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { ArrowLeft, Send, CheckCircle2 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PhotoUpload } from "@/components/PhotoUpload";
@@ -18,16 +18,11 @@ export const Route = createFileRoute("/metragem")({
 
 function MetragemPage() {
   const { user, addRecord } = useApp();
-  const navigate = useNavigate();
   const [contrato, setContrato] = useState("");
   const [wo, setWo] = useState("");
   const [fotoInicio, setFotoInicio] = useState<string | null>(null);
   const [fotoFim, setFotoFim] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!user) navigate({ to: "/login" });
-  }, [user, navigate]);
 
   const canSubmit = contrato.trim() && wo.trim() && fotoInicio && fotoFim && !submitting;
 
