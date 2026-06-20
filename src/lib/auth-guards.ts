@@ -2,6 +2,10 @@ import { redirect } from "@tanstack/react-router";
 import { getSupabaseClient } from "./supabase";
 import type { AppUser, UserRole } from "./types";
 
+function isClient(): boolean {
+  return typeof window !== "undefined";
+}
+
 export async function fetchProfile(userId: string): Promise<AppUser | null> {
   const supabase = getSupabaseClient();
   const { data: profile, error: profileError } = await supabase
@@ -26,6 +30,10 @@ export async function fetchProfile(userId: string): Promise<AppUser | null> {
 }
 
 export async function requireAuth(): Promise<AppUser> {
+  if (!isClient()) {
+    return { id: "", email: "", nome: "", role: "tecnico" };
+  }
+
   const supabase = getSupabaseClient();
   const {
     data: { session },
@@ -45,6 +53,8 @@ export async function requireAuth(): Promise<AppUser> {
 }
 
 export async function requireGuest() {
+  if (!isClient()) return;
+
   const supabase = getSupabaseClient();
   const {
     data: { session },

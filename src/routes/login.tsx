@@ -52,12 +52,19 @@ function LoginPage() {
 
         <form
           onSubmit={onSubmit}
+          method="post"
+          autoComplete="on"
           className="mt-10 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Login</label>
+            <label htmlFor="login-username" className="mb-1.5 block text-sm font-semibold">
+              Login
+            </label>
             <input
+              id="login-username"
+              name="username"
               type="text"
+              autoComplete="username"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
@@ -72,8 +79,17 @@ function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Senha</label>
-            <PasswordInput value={senha} onChange={setSenha} required />
+            <label htmlFor="login-password" className="mb-1.5 block text-sm font-semibold">
+              Senha
+            </label>
+            <PasswordInput
+              id="login-password"
+              name="password"
+              autoComplete="current-password"
+              value={senha}
+              onChange={setSenha}
+              required
+            />
           </div>
           <button
             type="submit"

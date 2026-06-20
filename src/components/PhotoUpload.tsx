@@ -1,5 +1,6 @@
-import { Camera, Upload, X, ImageIcon } from "lucide-react";
+import { Camera, Upload, X, ImageIcon, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { compressEvidencePhoto } from "@/lib/compress-image";
 
 export function PhotoUpload({
   label,
@@ -13,6 +14,7 @@ export function PhotoUpload({
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [compressing, setCompressing] = useState(false);
 
   useEffect(() => {
     if (!value) {
@@ -24,15 +26,29 @@ export function PhotoUpload({
     return () => URL.revokeObjectURL(url);
   }, [value]);
 
-  const handleFile = (file: File | undefined) => {
+  const handleFile = async (file: File | undefined) => {
     if (!file) return;
-    onChange(file);
+
+    setCompressing(true);
+    try {
+      const compressed = await compressEvidencePhoto(file);
+      onChange(compressed);
+    } finally {
+      setCompressing(false);
+      if (cameraRef.current) cameraRef.current.value = "";
+      if (galleryRef.current) galleryRef.current.value = "";
+    }
   };
 
   return (
     <div>
       <div className="mb-2 text-sm font-semibold text-foreground">{label}</div>
-      {preview ? (
+      {compressing ? (
+        <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-muted text-sm text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          Otimizando imagem...
+        </div>
+      ) : preview ? (
         <div className="relative overflow-hidden rounded-xl border border-border bg-muted">
           <img src={preview} alt={label} className="h-48 w-full object-cover" />
           <button
@@ -92,14 +108,14 @@ export function PhotoUpload({
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])}
+        onChange={(e) => void handleFile(e.target.files?.[0])}
       />
       <input
         ref={galleryRef}
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])}
+        onChange={(e) => void handleFile(e.target.files?.[0])}
       />
     </div>
   );

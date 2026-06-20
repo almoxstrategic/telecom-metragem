@@ -9,6 +9,8 @@ type PasswordInputProps = {
   required?: boolean;
   className?: string;
   id?: string;
+  name?: string;
+  autoComplete?: string;
 };
 
 export function PasswordInput({
@@ -18,6 +20,8 @@ export function PasswordInput({
   required,
   className,
   id,
+  name = "password",
+  autoComplete = "current-password",
 }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
 
@@ -25,11 +29,13 @@ export function PasswordInput({
     <div className={cn("relative", className)}>
       <input
         id={id}
+        name={name}
         type={visible ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
+        autoComplete={autoComplete}
         className="w-full rounded-lg border border-input bg-background px-4 py-3 pr-11 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
       <button
