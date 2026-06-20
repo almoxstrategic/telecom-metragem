@@ -47,9 +47,9 @@ function AdminHome() {
                 <UserPlus className="h-6 w-6" />
               </div>
               <div>
-                <div className="font-bold text-foreground">Criar Login</div>
+                <div className="font-bold text-foreground">Cadastrar Técnico</div>
                 <div className="text-xs text-muted-foreground">
-                  Cadastrar técnicos ou novos administradores
+                  Nome, matrícula, login e senha
                 </div>
               </div>
             </div>

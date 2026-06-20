@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseClient } from "./supabase";
+import { parseLoginIdentifier } from "./auth-identificacao";
 import { fetchProfile } from "./auth-guards";
 import type { AppUser } from "./types";
 
@@ -16,7 +17,7 @@ type AuthState = {
   user: AppUser | null;
   session: Session | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<AppUser>;
+  login: (identificacao: string, password: string) => Promise<AppUser>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<AppUser | null>;
   getAccessToken: () => string | null;
@@ -56,9 +57,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [hydrateSession]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (identificacao: string, password: string) => {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const authEmail = parseLoginIdentifier(identificacao);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: authEmail,
+      password,
+    });
     if (error) throw error;
     const profile = await hydrateSession(data.session);
     if (!profile) throw new Error("Perfil não encontrado.");

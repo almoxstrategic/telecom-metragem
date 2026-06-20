@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useApp } from "@/lib/app-store";
 import { requireGuest } from "@/lib/auth-guards";
+import { PasswordInput } from "@/components/PasswordInput";
 import { toast } from "sonner";
 import { LogIn } from "lucide-react";
 
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { login } = useApp();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +28,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const profile = await login(email.trim(), senha);
+      const profile = await login(loginId.trim(), senha);
       navigate({ to: profile.role === "admin" ? "/admin" : "/" });
     } catch (err) {
       toast.error((err as Error).message || "Credenciais inválidas.");
@@ -54,29 +55,25 @@ function LoginPage() {
           className="mt-10 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">E-mail</label>
+            <label className="mb-1.5 block text-sm font-semibold">Login</label>
             <input
-              type="email"
+              type="text"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="usuario@estrategic.com"
+              value={loginId}
+              onChange={(e) => {
+                const v = e.target.value;
+                setLoginId(v.includes("@") ? v : v.toLowerCase().replace(/[^a-z0-9._-]/g, ""));
+              }}
+              placeholder="Ex: joao.silva"
               className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               required
             />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-semibold">Senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              required
-            />
+            <PasswordInput value={senha} onChange={setSenha} required />
           </div>
           <button
             type="submit"

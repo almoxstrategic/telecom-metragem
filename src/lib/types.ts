@@ -3,6 +3,8 @@ export type UserRole = "admin" | "tecnico";
 export type AppUser = {
   id: string;
   email: string;
+  identificacao?: string;
+  login?: string;
   nome: string;
   role: UserRole;
 };

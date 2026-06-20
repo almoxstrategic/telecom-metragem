@@ -94,12 +94,19 @@ function MetragemPage() {
         tecnico_id: user.id,
       });
 
-      await notifyN8nControleMetragem(evidencia, user.nome);
+      const n8nResult = await notifyN8nControleMetragem(evidencia, user.nome);
 
       toast.success(`Registrado metragem da WO ${wo.trim()} (${total} m)`, {
         icon: <CheckCircle2 className="h-5 w-5" />,
         className: "!bg-success !text-success-foreground !border-success",
       });
+
+      if (!n8nResult.ok && !n8nResult.skipped) {
+        toast.warning(
+          "Evidência salva, mas a automação n8n não foi acionada. Verifique o webhook no n8n.",
+        );
+      }
+
       reset();
     } catch (err) {
       toast.error(`Erro de envio: ${(err as Error).message || "tente novamente"}`);

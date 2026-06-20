@@ -18,9 +18,16 @@ export function buildN8nPayload(evidencia: Evidencia, nomeTecnico: string) {
   };
 }
 
+export type N8nNotifyResult =
+  | { ok: true }
+  | { ok: false; skipped: true }
+  | { ok: false; skipped: false; status: number; message: string };
+
 export async function notifyN8nControleMetragem(
   evidencia: Evidencia,
   nomeTecnico: string,
-): Promise<void> {
-  await notifyControleMetragemWebhook({ data: buildN8nPayload(evidencia, nomeTecnico) });
+): Promise<N8nNotifyResult> {
+  return notifyControleMetragemWebhook({
+    data: buildN8nPayload(evidencia, nomeTecnico),
+  }) as Promise<N8nNotifyResult>;
 }

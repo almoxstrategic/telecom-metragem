@@ -6,7 +6,7 @@ export async function fetchProfile(userId: string): Promise<AppUser | null> {
   const supabase = getSupabaseClient();
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, nome, role")
+    .select("id, nome, role, identificacao, login")
     .eq("id", userId)
     .maybeSingle();
 
@@ -18,6 +18,8 @@ export async function fetchProfile(userId: string): Promise<AppUser | null> {
   return {
     id: profile.id,
     email,
+    identificacao: profile.identificacao ?? undefined,
+    login: profile.login ?? undefined,
     nome: profile.nome,
     role: profile.role as UserRole,
   };

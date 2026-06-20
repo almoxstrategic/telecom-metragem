@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getN8nWebhookUrl } from "./server-env";
 
 const payloadSchema = z.object({
   nome_tecnico: z.string(),
@@ -16,6 +17,10 @@ const payloadSchema = z.object({
   data_registro: z.string(),
 });
 
+function getWebhookUrl(): string | undefined {
+  return getN8nWebhookUrl();
+}
+
 /**
  * Dispara o fluxo n8n "controle_metragem".
  * Configure a URL em N8N_WEBHOOK_URL (.env / Render secrets).
@@ -23,13 +28,13 @@ const payloadSchema = z.object({
 export const notifyControleMetragemWebhook = createServerFn({ method: "POST" })
   .validator(payloadSchema)
   .handler(async ({ data }) => {
-    const webhookUrl = process.env.N8N_WEBHOOK_URL || process.env.VITE_N8N_WEBHOOK_URL;
+    const webhookUrl = getWebhookUrl();
 
     if (!webhookUrl) {
       console.warn(
         "[n8n] N8N_WEBHOOK_URL não configurada — fluxo controle_metragem não disparado.",
       );
-      return { ok: false, skipped: true };
+      return { ok: false, skipped: true as const };
     }
 
     const response = await fetch(webhookUrl, {
@@ -39,8 +44,15 @@ export const notifyControleMetragemWebhook = createServerFn({ method: "POST" })
     });
 
     if (!response.ok) {
-      throw new Error(`Falha ao notificar n8n (${response.status})`);
+      const body = await response.text().catch(() => "");
+      console.error("[n8n] webhook falhou", response.status, body);
+      return {
+        ok: false as const,
+        skipped: false as const,
+        status: response.status,
+        message: `Falha ao notificar n8n (${response.status})`,
+      };
     }
 
-    return { ok: true };
+    return { ok: true as const };
   });

@@ -24,7 +24,13 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
               {isAdmin ? "Administrador" : "Técnico"}
             </div>
             <div className="truncate font-semibold">{user.nome}</div>
-            <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+            <div className="truncate text-xs text-muted-foreground">
+              {isAdmin
+                ? (user.login ?? user.email)
+                : user.identificacao
+                  ? `Matrícula ${user.identificacao}`
+                  : (user.login ?? user.email)}
+            </div>
           </div>
         )}
       </div>

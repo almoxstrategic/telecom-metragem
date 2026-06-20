@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { requireAdmin } from "@/lib/auth-guards";
 import { useApp } from "@/lib/app-store";
 import { resetUserPassword } from "@/lib/admin-actions.server";
+import { PasswordInput } from "@/components/PasswordInput";
+import { isValidLogin } from "@/lib/auth-identificacao";
 
 export const Route = createFileRoute("/alterar")({
   beforeLoad: () => requireAdmin(),
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/alterar")({
 function AlterarPage() {
   const { getAccessToken } = useApp();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [senha, setSenha] = useState("");
   const [senha2, setSenha2] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,11 @@ function AlterarPage() {
     e.preventDefault();
     if (senha !== senha2) {
       toast.error("As senhas não coincidem.");
+      return;
+    }
+
+    if (!isValidLogin(login)) {
+      toast.error("Login inválido. Use 3–30 caracteres (letras, números, . _ -).");
       return;
     }
 
@@ -43,7 +50,7 @@ function AlterarPage() {
       await resetUserPassword({
         data: {
           accessToken,
-          email: email.trim(),
+          login: login.trim(),
           password: senha,
         },
       });
@@ -74,40 +81,26 @@ function AlterarPage() {
           className="mt-10 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">E-mail do usuário</label>
+            <label className="mb-1.5 block text-sm font-semibold">Login do usuário</label>
             <input
-              type="email"
+              type="text"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="usuario@estrategic.com"
+              value={login}
+              onChange={(e) => setLogin(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
+              placeholder="Ex: joao.silva"
               className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               required
             />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-semibold">Nova Senha</label>
-            <input
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              required
-            />
+            <PasswordInput value={senha} onChange={setSenha} required />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-semibold">Repetir Nova Senha</label>
-            <input
-              type="password"
-              value={senha2}
-              onChange={(e) => setSenha2(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              required
-            />
+            <PasswordInput value={senha2} onChange={setSenha2} required />
           </div>
           <button
             type="submit"
