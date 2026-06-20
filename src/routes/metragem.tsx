@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Send, CheckCircle2, Ruler, AlertCircle } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PhotoUpload } from "@/components/PhotoUpload";
@@ -56,6 +56,31 @@ function MetragemPage() {
       metFinal,
     });
   }, [contrato, wo, metInicial, metFinal]);
+
+  const persistDraftNow = useCallback(() => {
+    saveMetragemDraft({
+      contrato,
+      wo,
+      metInicial,
+      metFinal,
+    });
+  }, [contrato, wo, metInicial, metFinal]);
+
+  useEffect(() => {
+    const flushDraft = () => persistDraftNow();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushDraft();
+    };
+
+    window.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", flushDraft);
+
+    return () => {
+      window.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", flushDraft);
+    };
+  }, [persistDraftNow]);
 
   const mi = parseFloat(metInicial);
   const mf = parseFloat(metFinal);
@@ -224,8 +249,24 @@ function MetragemPage() {
           </div>
 
           <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <PhotoUpload label="📸 Foto do Início" value={fotoInicio} onChange={setFotoInicio} />
-            <PhotoUpload label="📸 Foto do Fim" value={fotoFim} onChange={setFotoFim} />
+            <PhotoUpload
+              label="📸 Foto do Início"
+              value={fotoInicio}
+              onChange={setFotoInicio}
+              onBeforePick={persistDraftNow}
+            />
+            {fotoInicio ? (
+              <PhotoUpload
+                label="📸 Foto do Fim"
+                value={fotoFim}
+                onChange={setFotoFim}
+                onBeforePick={persistDraftNow}
+              />
+            ) : (
+              <p className="rounded-lg border border-dashed border-border bg-surface px-4 py-3 text-xs text-muted-foreground">
+                Tire a foto do início primeiro. Isso reduz o uso de memória no celular.
+              </p>
+            )}
           </div>
         </form>
       </main>
