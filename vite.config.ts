@@ -16,4 +16,12 @@ export default defineConfig({
     preset: "node-server",
     env: ["SUPABASE_SERVICE_ROLE_KEY", "ADMIN_SETUP_SECRET"],
   },
+  // SSR no Render falha com jsxDEV (runtime de dev) se development=true no OXC.
+  vite: {
+    oxc: {
+      jsx: {
+        development: false,
+      },
+    },
+  },
 });
