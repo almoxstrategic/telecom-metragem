@@ -22,6 +22,9 @@ import type { DateRange } from "react-day-picker";
 
 export const Route = createFileRoute("/todos")({
   beforeLoad: () => requireAdmin(),
+  validateSearch: (search: Record<string, unknown>) => ({
+    login: typeof search.login === "string" ? search.login : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Todas as Metragens — Estrategic Field" },
@@ -36,9 +39,10 @@ function fmtDate(d: Date) {
 }
 
 function TodosPage() {
+  const { login: loginFilter } = Route.useSearch();
   const [records, setRecords] = useState<Evidencia[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(loginFilter ?? "");
   const [range, setRange] = useState<DateRange | undefined>();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -61,6 +65,10 @@ function TodosPage() {
     loadRecords();
   }, []);
 
+  useEffect(() => {
+    if (loginFilter) setQuery(loginFilter);
+  }, [loginFilter]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return records
@@ -68,6 +76,7 @@ function TodosPage() {
         const matchQ =
           !q ||
           (r.tecnico_nome ?? "").toLowerCase().includes(q) ||
+          (r.tecnico_login ?? "").toLowerCase().includes(q) ||
           r.wo.toLowerCase().includes(q) ||
           r.contrato.toLowerCase().includes(q);
         const date = new Date(r.data_registro);
@@ -173,7 +182,7 @@ function TodosPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar por técnico, WO ou contrato..."
+              placeholder="Buscar por login, técnico, WO ou contrato..."
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
             {query && (

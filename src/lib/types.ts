@@ -23,6 +23,7 @@ export type Evidencia = {
   data_registro: string;
   tecnico_id: string;
   tecnico_nome?: string;
+  tecnico_login?: string;
 };
 
 export type EvidenciaInsert = {

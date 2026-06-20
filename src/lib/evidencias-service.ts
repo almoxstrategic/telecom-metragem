@@ -34,7 +34,7 @@ export async function deleteTecnicoEvidencePhotos(tecnicoId: string): Promise<vo
 }
 
 type DbEvidencia = Evidencia & {
-  profiles?: { nome: string } | null;
+  profiles?: { nome: string; login?: string | null } | null;
 };
 
 function mapRow(row: DbEvidencia): Evidencia {
@@ -51,7 +51,8 @@ function mapRow(row: DbEvidencia): Evidencia {
     foto_fim_path: row.foto_fim_path,
     data_registro: row.data_registro,
     tecnico_id: row.tecnico_id,
-    tecnico_nome: row.profiles?.nome,
+    tecnico_nome: row.profiles?.nome ?? row.tecnico_nome,
+    tecnico_login: row.profiles?.login ?? row.tecnico_login ?? undefined,
   };
 }
 
@@ -78,18 +79,25 @@ export async function fetchAllEvidencias(): Promise<Evidencia[]> {
 
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, nome");
+    .select("id, nome, login");
 
   if (profilesError) throw profilesError;
 
-  const nameById = new Map((profiles ?? []).map((profile) => [profile.id, profile.nome]));
-
-  return (data ?? []).map((row) =>
-    mapRow({
-      ...(row as DbEvidencia),
-      tecnico_nome: nameById.get(row.tecnico_id),
-    }),
+  const profileById = new Map(
+    (profiles ?? []).map((profile) => [
+      profile.id,
+      { nome: profile.nome, login: profile.login ?? undefined },
+    ]),
   );
+
+  return (data ?? []).map((row) => {
+    const profile = profileById.get(row.tecnico_id);
+    return mapRow({
+      ...(row as DbEvidencia),
+      tecnico_nome: profile?.nome,
+      tecnico_login: profile?.login,
+    });
+  });
 }
 
 export async function uploadEvidencePhoto(
