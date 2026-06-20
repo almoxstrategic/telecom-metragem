@@ -49,11 +49,6 @@ function loadDotEnv() {
   }
 }
 
-export function getN8nWebhookUrl(): string | undefined {
-  const url = readEnv("N8N_WEBHOOK_URL") ?? readEnv("VITE_N8N_WEBHOOK_URL");
-  return url?.trim() || undefined;
-}
-
 function readEnv(name: string): string | undefined {
   loadDotEnv();
 

@@ -14,6 +14,6 @@ export default defineConfig({
   },
   nitro: {
     preset: "node-server",
-    env: ["SUPABASE_SERVICE_ROLE_KEY", "N8N_WEBHOOK_URL", "ADMIN_SETUP_SECRET"],
+    env: ["SUPABASE_SERVICE_ROLE_KEY", "ADMIN_SETUP_SECRET"],
   },
 });

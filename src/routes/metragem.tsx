@@ -9,7 +9,6 @@ import {
   insertEvidencia,
   uploadEvidencePhoto,
 } from "@/lib/evidencias-service";
-import { notifyN8nControleMetragem } from "@/lib/n8n-webhook";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,7 +80,7 @@ function MetragemPage() {
         uploadEvidencePhoto(user.id, fotoFim, "fim"),
       ]);
 
-      const evidencia = await insertEvidencia({
+      await insertEvidencia({
         contrato: contrato.trim(),
         wo: wo.trim(),
         metragem_inicial: mi,
@@ -94,18 +93,10 @@ function MetragemPage() {
         tecnico_id: user.id,
       });
 
-      const n8nResult = await notifyN8nControleMetragem(evidencia, user.nome);
-
       toast.success(`Registrado metragem da WO ${wo.trim()} (${total} m)`, {
         icon: <CheckCircle2 className="h-5 w-5" />,
         className: "!bg-success !text-success-foreground !border-success",
       });
-
-      if (!n8nResult.ok && !n8nResult.skipped) {
-        toast.warning(
-          "Evidência salva, mas a automação n8n não foi acionada. Verifique o webhook no n8n.",
-        );
-      }
 
       reset();
     } catch (err) {
