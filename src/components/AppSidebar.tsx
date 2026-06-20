@@ -6,9 +6,10 @@ import { useApp } from "@/lib/app-store";
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useApp();
   const navigate = useNavigate();
+  const isAdmin = user?.role === "admin";
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onNavigate?.();
     navigate({ to: "/login" });
   };
@@ -19,54 +20,59 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Logo />
         {user && (
           <div className="mt-4">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Técnico</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+              {isAdmin ? "Administrador" : "Técnico"}
+            </div>
             <div className="truncate font-semibold">{user.nome}</div>
-            <div className="text-xs text-muted-foreground">Matrícula {user.matricula}</div>
+            <div className="truncate text-xs text-muted-foreground">{user.email}</div>
           </div>
         )}
       </div>
 
       <div className="flex-1 space-y-1 p-3">
-        <Link
-          to="/"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-        >
-          <Home className="h-5 w-5 text-primary" />
-          Início
-        </Link>
-        <Link
-          to="/historico"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-        >
-          <ClipboardList className="h-5 w-5 text-primary" />
-          Meus Registros
-        </Link>
-
-        <div className="mt-4 px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          Administração
-        </div>
-        <Link
-          to="/admin"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-        >
-          <ShieldCheck className="h-5 w-5 text-primary" />
-          Painel Admin
-        </Link>
-        <Link
-          to="/todos"
-          onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
-          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-        >
-          <Database className="h-5 w-5 text-primary" />
-          Todas as Metragens
-        </Link>
+        {isAdmin ? (
+          <>
+            <Link
+              to="/admin"
+              onClick={onNavigate}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
+              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+            >
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Painel Admin
+            </Link>
+            <Link
+              to="/todos"
+              onClick={onNavigate}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
+              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+            >
+              <Database className="h-5 w-5 text-primary" />
+              Todas as Metragens
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/"
+              onClick={onNavigate}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
+              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+            >
+              <Home className="h-5 w-5 text-primary" />
+              Início
+            </Link>
+            <Link
+              to="/historico"
+              onClick={onNavigate}
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
+              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+            >
+              <ClipboardList className="h-5 w-5 text-primary" />
+              Meus Registros
+            </Link>
+          </>
+        )}
       </div>
 
       <div className="border-t border-sidebar-border p-3">

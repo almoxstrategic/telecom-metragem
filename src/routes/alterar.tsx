@@ -2,48 +2,70 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import { requireAdmin } from "@/lib/auth-guards";
+import { useApp } from "@/lib/app-store";
+import { resetUserPassword } from "@/lib/admin-actions.server";
 
 export const Route = createFileRoute("/alterar")({
+  beforeLoad: () => requireAdmin(),
   head: () => ({
     meta: [
       { title: "Alterar Senha — Estrategic Field" },
-      { name: "description", content: "Recupere e altere sua senha." },
+      { name: "description", content: "Recuperação de senhas (admin)." },
     ],
   }),
   component: AlterarPage,
 });
 
 function AlterarPage() {
+  const { getAccessToken } = useApp();
   const navigate = useNavigate();
-  const [matricula, setMatricula] = useState("");
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [senha2, setSenha2] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (senha !== senha2) {
       toast.error("As senhas não coincidem.");
       return;
     }
+
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await resetUserPassword({
+        data: {
+          accessToken,
+          email: email.trim(),
+          password: senha,
+        },
+      });
       toast.success("Senha atualizada com sucesso!");
+      navigate({ to: "/admin" });
+    } catch (err) {
+      toast.error((err as Error).message || "Erro ao alterar senha.");
+    } finally {
       setLoading(false);
-      navigate({ to: "/login" });
-    }, 400);
+    }
   };
 
   return (
     <main className="flex min-h-screen flex-col bg-surface px-6 pb-10 pt-16">
       <div className="mx-auto w-full max-w-sm">
         <div className="flex flex-col items-center gap-3">
-          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground font-black text-3xl shadow-lg">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-3xl font-black text-primary-foreground shadow-lg">
             E
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-black tracking-tight">Alterar Senha</h1>
-            <p className="text-sm text-muted-foreground">Defina uma nova senha de acesso</p>
+            <p className="text-sm text-muted-foreground">Recuperação de acesso (admin)</p>
           </div>
         </div>
 
@@ -52,15 +74,15 @@ function AlterarPage() {
           className="mt-10 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Identificação</label>
+            <label className="mb-1.5 block text-sm font-semibold">E-mail do usuário</label>
             <input
-              type="text"
+              type="email"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
-              value={matricula}
-              onChange={(e) => setMatricula(e.target.value)}
-              placeholder="nome.sobrenome"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="usuario@estrategic.com"
               className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               required
             />
@@ -97,8 +119,8 @@ function AlterarPage() {
           </button>
 
           <p className="pt-2 text-center text-sm text-muted-foreground">
-            <Link to="/login" className="font-semibold text-primary hover:underline">
-              Voltar para o Login
+            <Link to="/admin" className="font-semibold text-primary hover:underline">
+              Voltar ao painel
             </Link>
           </p>
         </form>
