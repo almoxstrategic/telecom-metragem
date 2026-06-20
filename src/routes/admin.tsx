@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Database } from "lucide-react";
+import { Database, KeyRound, UserPlus } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { requireAdmin } from "@/lib/auth-guards";
 
@@ -36,6 +36,34 @@ function AdminHome() {
                 <div className="font-bold text-foreground">Todas as Metragens</div>
                 <div className="text-xs text-muted-foreground">
                   Auditar registros de todos os técnicos
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/cadastro" className="block">
+            <div className="relative flex h-40 flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary">
+                <UserPlus className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="font-bold text-foreground">Criar Login</div>
+                <div className="text-xs text-muted-foreground">
+                  Cadastrar técnicos ou novos administradores
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/alterar" className="block">
+            <div className="relative flex h-40 flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary">
+                <KeyRound className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="font-bold text-foreground">Alterar Senha</div>
+                <div className="text-xs text-muted-foreground">
+                  Recuperação de acesso para usuários
                 </div>
               </div>
             </div>
