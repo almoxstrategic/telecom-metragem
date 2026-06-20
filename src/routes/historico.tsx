@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, AlertTriangle, FileText, Calendar } from "lucide-react";
+import { ArrowLeft, AlertTriangle, ChevronDown, FileText, Calendar } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { useApp } from "@/lib/app-store";
 import { requireTecnico } from "@/lib/auth-guards";
@@ -28,6 +28,7 @@ function HistoricoPage() {
   const [records, setRecords] = useState<Evidencia[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -91,25 +92,83 @@ function HistoricoPage() {
             <p className="text-sm text-muted-foreground">Nenhum registro encontrado.</p>
           </div>
         ) : (
-          <ul className="space-y-3">
-            {filtered.map((r) => (
-              <li key={r.id} className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                    WO {r.wo}
-                  </span>
-                  <span className="text-sm font-medium">Contrato {r.contrato}</span>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                    Total: {r.total_utilizado} m
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(r.data_registro).toLocaleString("pt-BR")}
-                  </span>
-                </div>
-              </li>
-            ))}
+          <ul className="space-y-2">
+            {filtered.map((r) => {
+              const open = expanded === r.id;
+              const dt = new Date(r.data_registro);
+              return (
+                <li
+                  key={r.id}
+                  className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(open ? null : r.id)}
+                    className="flex w-full items-center justify-between gap-3 p-4 text-left active:bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                          WO {r.wo}
+                        </span>
+                        <span className="text-xs font-semibold text-foreground">
+                          Contrato {r.contrato}
+                        </span>
+                        <span className="ml-auto rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                          {r.total_utilizado} m
+                        </span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
+                        <span>Inicial {r.metragem_inicial} m</span>
+                        <span>Final {r.metragem_final} m</span>
+                        <span>
+                          {dt.toLocaleDateString("pt-BR")} ·{" "}
+                          {dt.toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
+                        open ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <div
+                    className={`grid transition-all duration-300 ${
+                      open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="grid grid-cols-2 gap-3 border-t border-border p-4">
+                        <figure>
+                          <img
+                            src={r.foto_inicio_url}
+                            alt="Foto do início"
+                            className="h-40 w-full rounded-lg object-cover"
+                          />
+                          <figcaption className="mt-1 text-center text-xs font-semibold text-muted-foreground">
+                            Foto do Início
+                          </figcaption>
+                        </figure>
+                        <figure>
+                          <img
+                            src={r.foto_fim_url}
+                            alt="Foto do fim"
+                            className="h-40 w-full rounded-lg object-cover"
+                          />
+                          <figcaption className="mt-1 text-center text-xs font-semibold text-muted-foreground">
+                            Foto do Fim
+                          </figcaption>
+                        </figure>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </main>

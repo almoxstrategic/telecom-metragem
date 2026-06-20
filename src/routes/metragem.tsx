@@ -45,7 +45,7 @@ function MetragemPage() {
   const mi = parseFloat(metInicial);
   const mf = parseFloat(metFinal);
   const total = useMemo(() => {
-    if (Number.isFinite(mi) && Number.isFinite(mf)) return mf - mi;
+    if (Number.isFinite(mi) && Number.isFinite(mf)) return mi - mf;
     return null;
   }, [mi, mf]);
   const totalValid = total !== null && total >= 0;
@@ -199,7 +199,7 @@ function MetragemPage() {
                 <Ruler className="h-5 w-5" />
                 {total === null
                   ? "Total Utilizado"
-                  : `Metragem Final - Metragem Inicial = Total Utilizado`}
+                  : `Metragem Inicial - Metragem Final = Total Utilizado`}
               </div>
               <div className="text-lg font-black">
                 {total === null ? "— m" : totalValid ? `${total} metros` : "Valor inválido"}
