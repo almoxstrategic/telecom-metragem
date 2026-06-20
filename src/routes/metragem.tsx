@@ -249,6 +249,11 @@ function MetragemPage() {
           </div>
 
           <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-950">
+              <strong className="font-semibold">Dica:</strong> se &quot;Tirar Foto&quot; der erro de
+              memória no celular, tire a foto pelo app <strong>Câmera</strong> do aparelho e use{" "}
+              <strong>Fazer Upload</strong> para anexar a imagem.
+            </p>
             <PhotoUpload
               label="📸 Foto do Início"
               value={fotoInicio}
