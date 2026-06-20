@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ClipboardList, LogOut, Home, ShieldCheck, Database, UserPlus, KeyRound } from "lucide-react";
+import { ClipboardList, LogOut, Home, ShieldCheck, Database } from "lucide-react";
 import { Logo } from "./Logo";
 import { useApp } from "@/lib/app-store";
 
@@ -49,24 +49,6 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
             >
               <Database className="h-5 w-5 text-primary" />
               Todas as Metragens
-            </Link>
-            <Link
-              to="/cadastro"
-              onClick={onNavigate}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
-              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-            >
-              <UserPlus className="h-5 w-5 text-primary" />
-              Criar Login
-            </Link>
-            <Link
-              to="/alterar"
-              onClick={onNavigate}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-sidebar-accent"
-              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-            >
-              <KeyRound className="h-5 w-5 text-primary" />
-              Alterar Senhas
             </Link>
           </>
         ) : (
