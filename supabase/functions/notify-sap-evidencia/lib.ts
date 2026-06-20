@@ -63,6 +63,7 @@ export function formatDataRegistro(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -147,19 +148,19 @@ export async function resolveNomeTecnico(
 }
 
 export function buildEvidenciaEmail(data: EvidenciaEmailData): { subject: string; html: string } {
-  const subject = `Liberação SAP - Contrato: ${data.contrato} / WO: ${data.wo}`;
+  const subject = `Evidência BTP - Contrato: ${data.contrato} / WO: ${data.wo}`;
 
-  const photoBlock = (title: string, cid: string, fullUrl: string) => `
+  const photoBlock = (title: string, imageUrl: string) => `
     <div style="margin-bottom:28px;">
       <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#0f172a;">${title}</p>
       <img
-        src="cid:${cid}"
+        src="${imageUrl}"
         alt="${title}"
         style="display:block;max-width:400px;width:100%;height:auto;border-radius:8px;border:1px solid #e2e8f0;"
       />
       <p style="margin:12px 0 0;">
         <a
-          href="${fullUrl}"
+          href="${imageUrl}"
           target="_blank"
           rel="noopener noreferrer"
           style="display:inline-block;padding:10px 18px;background:#1d4ed8;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;"
@@ -181,7 +182,7 @@ export function buildEvidenciaEmail(data: EvidenciaEmailData): { subject: string
             <tr>
               <td style="padding:28px 28px 12px;background:#0f172a;color:#ffffff;">
                 <h1 style="margin:0;font-size:22px;line-height:1.3;">Estrategic Field</h1>
-                <p style="margin:8px 0 0;font-size:14px;color:#cbd5e1;">Liberação SAP — Registro de Metragem</p>
+                <p style="margin:8px 0 0;font-size:14px;color:#cbd5e1;">Evidência BTP — Registro de Metragem</p>
               </td>
             </tr>
             <tr>
@@ -222,8 +223,8 @@ export function buildEvidenciaEmail(data: EvidenciaEmailData): { subject: string
                 </div>
 
                 <h2 style="margin:0 0 16px;font-size:16px;color:#0f172a;">Evidências Fotográficas</h2>
-                ${photoBlock("Bobina Inicial", "bobina-inicial", data.foto_inicio_url)}
-                ${photoBlock("Bobina Final", "bobina-final", data.foto_fim_url)}
+                ${photoBlock("Bobina Inicial", data.foto_inicio_url)}
+                ${photoBlock("Bobina Final", data.foto_fim_url)}
 
                 <p style="margin:0;font-size:12px;line-height:1.5;color:#64748b;">
                   Este e-mail foi gerado automaticamente pelo sistema Estrategic Field após o envio da evidência em campo.
@@ -275,56 +276,11 @@ export function assertWebhookSecret(req: Request): void {
   }
 }
 
-function guessImageFilename(url: string, fallback: string): string {
-  try {
-    const pathname = new URL(url).pathname;
-    const name = pathname.split("/").pop();
-    if (name && /\.[a-z0-9]+$/i.test(name)) return name;
-  } catch {
-    // ignore
-  }
-  return fallback;
-}
-
-function guessContentType(filename: string): string {
-  const ext = filename.split(".").pop()?.toLowerCase();
-  if (ext === "png") return "image/png";
-  if (ext === "webp") return "image/webp";
-  if (ext === "gif") return "image/gif";
-  return "image/jpeg";
-}
-
-export function buildInlinePhotoAttachments(data: EvidenciaEmailData) {
-  const inicioFilename = guessImageFilename(data.foto_inicio_url, "bobina-inicial.jpg");
-  const fimFilename = guessImageFilename(data.foto_fim_url, "bobina-final.jpg");
-
-  return [
-    {
-      path: data.foto_inicio_url,
-      filename: inicioFilename,
-      content_id: "bobina-inicial",
-      content_type: guessContentType(inicioFilename),
-    },
-    {
-      path: data.foto_fim_url,
-      filename: fimFilename,
-      content_id: "bobina-final",
-      content_type: guessContentType(fimFilename),
-    },
-  ];
-}
-
 export async function sendResendEmail(input: {
   from: string;
   to: string[];
   subject: string;
   html: string;
-  attachments?: Array<{
-    path: string;
-    filename: string;
-    content_id: string;
-    content_type: string;
-  }>;
 }): Promise<{ id?: string }> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY não configurada.");
@@ -340,7 +296,6 @@ export async function sendResendEmail(input: {
       to: input.to,
       subject: input.subject,
       html: input.html,
-      attachments: input.attachments,
     }),
   });
 

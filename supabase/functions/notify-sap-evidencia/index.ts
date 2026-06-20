@@ -2,7 +2,6 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {
   assertWebhookSecret,
   buildEvidenciaEmail,
-  buildInlinePhotoAttachments,
   extractEvidenciaData,
   finalizeEmailData,
   parseRecipients,
@@ -52,7 +51,6 @@ Deno.serve(async (req) => {
       to: recipients,
       subject,
       html,
-      attachments: buildInlinePhotoAttachments(emailData),
     });
 
     return new Response(
