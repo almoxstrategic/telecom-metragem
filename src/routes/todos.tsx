@@ -1,14 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { ArrowLeft, Search, Calendar as CalendarIcon, ChevronDown, FileText, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  Search,
+  Calendar as CalendarIcon,
+  ChevronDown,
+  FileText,
+  X,
+  Trash2,
+} from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
-import { useApp } from "@/lib/app-store";
+import { requireAdmin } from "@/lib/auth-guards";
+import { deleteEvidenciasWithPhotos, fetchAllEvidencias } from "@/lib/evidencias-service";
+import type { Evidencia } from "@/lib/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type { DateRange } from "react-day-picker";
 
 export const Route = createFileRoute("/todos")({
+  beforeLoad: () => requireAdmin(),
   head: () => ({
     meta: [
       { title: "Todas as Metragens — Estrategic Field" },
@@ -23,31 +36,95 @@ function fmtDate(d: Date) {
 }
 
 function TodosPage() {
-  const { records } = useApp();
+  const [records, setRecords] = useState<Evidencia[]>([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [range, setRange] = useState<DateRange | undefined>();
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  const loadRecords = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAllEvidencias();
+      setRecords(data);
+      setSelected(new Set());
+    } catch (err) {
+      toast.error((err as Error).message || "Erro ao carregar registros.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRecords();
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return records.filter((r) => {
-      const matchQ =
-        !q ||
-        r.tecnico.toLowerCase().includes(q) ||
-        r.wo.toLowerCase().includes(q) ||
-        r.contrato.toLowerCase().includes(q) ||
-        r.matricula.includes(q);
-      const date = new Date(r.createdAt);
-      const from = range?.from ? new Date(range.from.setHours(0, 0, 0, 0)) : null;
-      const to = range?.to
-        ? new Date(new Date(range.to).setHours(23, 59, 59, 999))
-        : from
-          ? new Date(new Date(from).setHours(23, 59, 59, 999))
-          : null;
-      const matchD = !from || (date >= from && (!to || date <= to));
-      return matchQ && matchD;
-    }).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    return records
+      .filter((r) => {
+        const matchQ =
+          !q ||
+          (r.tecnico_nome ?? "").toLowerCase().includes(q) ||
+          r.wo.toLowerCase().includes(q) ||
+          r.contrato.toLowerCase().includes(q);
+        const date = new Date(r.data_registro);
+        const from = range?.from ? new Date(range.from.setHours(0, 0, 0, 0)) : null;
+        const to = range?.to
+          ? new Date(new Date(range.to).setHours(23, 59, 59, 999))
+          : from
+            ? new Date(new Date(from).setHours(23, 59, 59, 999))
+            : null;
+        const matchD = !from || (date >= from && (!to || date <= to));
+        return matchQ && matchD;
+      })
+      .sort((a, b) => (a.data_registro < b.data_registro ? 1 : -1));
   }, [records, query, range]);
+
+  const allVisibleSelected =
+    filtered.length > 0 && filtered.every((record) => selected.has(record.id));
+
+  const toggleAll = (checked: boolean) => {
+    if (!checked) {
+      setSelected(new Set());
+      return;
+    }
+    setSelected(new Set(filtered.map((record) => record.id)));
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) {
+      toast.error("Selecione ao menos um registro.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Excluir ${selected.size} registro(s) selecionado(s) e liberar espaço no Storage?`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await deleteEvidenciasWithPhotos(Array.from(selected));
+      toast.success("Registros e fotos excluídos com sucesso.");
+      await loadRecords();
+    } catch (err) {
+      toast.error((err as Error).message || "Erro ao excluir registros.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const rangeLabel = range?.from
     ? range.to && range.to.getTime() !== range.from.getTime()
@@ -72,6 +149,22 @@ function TodosPage() {
             Auditoria de evidências enviadas pelos técnicos.
           </p>
         </header>
+
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm">
+            <Checkbox checked={allVisibleSelected} onCheckedChange={(v) => toggleAll(v === true)} />
+            Selecionar Todos
+          </label>
+          <button
+            type="button"
+            onClick={handleBulkDelete}
+            disabled={deleting || selected.size === 0}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
+          >
+            <Trash2 className="h-4 w-4" />
+            {deleting ? "Excluindo..." : "Excluir Selecionados"}
+          </button>
+        </div>
 
         <div className="mb-5 flex flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm focus-within:ring-1 focus-within:ring-primary">
@@ -116,13 +209,15 @@ function TodosPage() {
                 onSelect={setRange}
                 numberOfMonths={1}
                 initialFocus
-                className={cn("p-3 pointer-events-auto")}
+                className={cn("pointer-events-auto p-3")}
               />
             </PopoverContent>
           </Popover>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Carregando registros...</p>
+        ) : filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
             <FileText className="mx-auto mb-2 h-10 w-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Nenhum registro encontrado.</p>
@@ -131,46 +226,54 @@ function TodosPage() {
           <ul className="space-y-2">
             {filtered.map((r) => {
               const open = expanded === r.id;
-              const dt = new Date(r.createdAt);
+              const dt = new Date(r.data_registro);
               return (
                 <li
                   key={r.id}
                   className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
                 >
-                  <button
-                    onClick={() => setExpanded(open ? null : r.id)}
-                    className="flex w-full items-center justify-between gap-3 p-4 text-left active:bg-muted/50"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                          WO {r.wo}
-                        </span>
-                        <span className="text-xs font-semibold text-foreground">{r.tecnico}</span>
-                        <span className="text-[11px] text-muted-foreground">
-                          Matr. {r.matricula}
-                        </span>
-                        <span className="ml-auto rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
-                          {r.metragemTotal} m
-                        </span>
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
-                        <span>Contrato {r.contrato}</span>
-                        <span>
-                          {dt.toLocaleDateString("pt-BR")} ·{" "}
-                          {dt.toLocaleTimeString("pt-BR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronDown
-                      className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
-                        open ? "rotate-180" : ""
-                      }`}
+                  <div className="flex items-start gap-3 p-4">
+                    <Checkbox
+                      checked={selected.has(r.id)}
+                      onCheckedChange={(v) => toggleOne(r.id, v === true)}
+                      className="mt-1"
                     />
-                  </button>
+                    <button
+                      onClick={() => setExpanded(open ? null : r.id)}
+                      className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left active:bg-muted/50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                            WO {r.wo}
+                          </span>
+                          <span className="text-xs font-semibold text-foreground">
+                            {r.tecnico_nome ?? "Técnico"}
+                          </span>
+                          <span className="ml-auto rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                            {r.total_utilizado} m
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
+                          <span>Contrato {r.contrato}</span>
+                          <span>Inicial {r.metragem_inicial} m</span>
+                          <span>Final {r.metragem_final} m</span>
+                          <span>
+                            {dt.toLocaleDateString("pt-BR")} ·{" "}
+                            {dt.toLocaleTimeString("pt-BR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronDown
+                        className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
+                          open ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
                   <div
                     className={`grid transition-all duration-300 ${
                       open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
@@ -180,7 +283,7 @@ function TodosPage() {
                       <div className="grid grid-cols-2 gap-3 border-t border-border p-4">
                         <figure>
                           <img
-                            src={r.fotoInicio}
+                            src={r.foto_inicio_url}
                             alt="Foto do início"
                             className="h-40 w-full rounded-lg object-cover"
                           />
@@ -190,7 +293,7 @@ function TodosPage() {
                         </figure>
                         <figure>
                           <img
-                            src={r.fotoFim}
+                            src={r.foto_fim_url}
                             alt="Foto do fim"
                             className="h-40 w-full rounded-lg object-cover"
                           />

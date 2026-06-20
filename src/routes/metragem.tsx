@@ -1,12 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Send, CheckCircle2, Ruler } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2, Ruler, AlertCircle } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { useApp } from "@/lib/app-store";
+import { requireTecnico } from "@/lib/auth-guards";
+import {
+  insertEvidencia,
+  uploadEvidencePhoto,
+} from "@/lib/evidencias-service";
+import { notifyN8nControleMetragem } from "@/lib/n8n-webhook";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/metragem")({
+  beforeLoad: () => requireTecnico(),
   head: () => ({
     meta: [
       { title: "Evidência de Metragem — Estrategic Field" },
@@ -17,14 +33,15 @@ export const Route = createFileRoute("/metragem")({
 });
 
 function MetragemPage() {
-  const { user, addRecord } = useApp();
+  const { user } = useApp();
   const [contrato, setContrato] = useState("");
   const [wo, setWo] = useState("");
   const [metInicial, setMetInicial] = useState("");
   const [metFinal, setMetFinal] = useState("");
-  const [fotoInicio, setFotoInicio] = useState<string | null>(null);
-  const [fotoFim, setFotoFim] = useState<string | null>(null);
+  const [fotoInicio, setFotoInicio] = useState<File | null>(null);
+  const [fotoFim, setFotoFim] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showIncompleteAlert, setShowIncompleteAlert] = useState(false);
 
   const mi = parseFloat(metInicial);
   const mf = parseFloat(metFinal);
@@ -53,31 +70,46 @@ function MetragemPage() {
     setFotoFim(null);
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || !user || !fotoInicio || !fotoFim) return;
+
     setSubmitting(true);
-    setTimeout(() => {
-      try {
-        addRecord({
-          contrato: contrato.trim(),
-          wo: wo.trim(),
-          metragemInicial: mi,
-          metragemFinal: mf,
-          fotoInicio: fotoInicio!,
-          fotoFim: fotoFim!,
-        });
-        toast.success(`Registrado metragem da WO ${wo.trim()} (${total} m)`, {
-          icon: <CheckCircle2 className="h-5 w-5" />,
-          className: "!bg-success !text-success-foreground !border-success",
-        });
-        reset();
-      } catch (err) {
-        toast.error(`Erro de envio: ${(err as Error).message || "tente novamente"}`);
-      } finally {
-        setSubmitting(false);
-      }
-    }, 500);
+    try {
+      const [inicioUpload, fimUpload] = await Promise.all([
+        uploadEvidencePhoto(user.id, fotoInicio, "inicio"),
+        uploadEvidencePhoto(user.id, fotoFim, "fim"),
+      ]);
+
+      const evidencia = await insertEvidencia({
+        contrato: contrato.trim(),
+        wo: wo.trim(),
+        metragem_inicial: mi,
+        metragem_final: mf,
+        total_utilizado: total!,
+        foto_inicio_url: inicioUpload.publicUrl,
+        foto_fim_url: fimUpload.publicUrl,
+        foto_inicio_path: inicioUpload.path,
+        foto_fim_path: fimUpload.path,
+        tecnico_id: user.id,
+      });
+
+      await notifyN8nControleMetragem(evidencia, user.nome);
+
+      toast.success(`Registrado metragem da WO ${wo.trim()} (${total} m)`, {
+        icon: <CheckCircle2 className="h-5 w-5" />,
+        className: "!bg-success !text-success-foreground !border-success",
+      });
+      reset();
+    } catch (err) {
+      toast.error(`Erro de envio: ${(err as Error).message || "tente novamente"}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitClick = () => {
+    if (!canSubmit) setShowIncompleteAlert(true);
   };
 
   return (
@@ -90,13 +122,6 @@ function MetragemPage() {
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Link>
-
-        <section className="mb-5">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Olá, {user.nome}</span>{" "}
-            Escolha um módulo para iniciar seu registro.
-          </p>
-        </section>
 
         <header className="mb-6">
           <h1 className="text-2xl font-black tracking-tight">Evidência de Metragem</h1>
@@ -140,7 +165,9 @@ function MetragemPage() {
                 <input
                   inputMode="decimal"
                   value={metInicial}
-                  onChange={(e) => setMetInicial(e.target.value.replace(",", ".").replace(/[^0-9.]/g, ""))}
+                  onChange={(e) =>
+                    setMetInicial(e.target.value.replace(",", ".").replace(/[^0-9.]/g, ""))
+                  }
                   placeholder="0"
                   className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   required
@@ -151,7 +178,9 @@ function MetragemPage() {
                 <input
                   inputMode="decimal"
                   value={metFinal}
-                  onChange={(e) => setMetFinal(e.target.value.replace(",", ".").replace(/[^0-9.]/g, ""))}
+                  onChange={(e) =>
+                    setMetFinal(e.target.value.replace(",", ".").replace(/[^0-9.]/g, ""))
+                  }
                   placeholder="0"
                   className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   required
@@ -170,14 +199,12 @@ function MetragemPage() {
             >
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <Ruler className="h-5 w-5" />
-                Total Utilizado
+                {total === null
+                  ? "Total Utilizado"
+                  : `Metragem Final - Metragem Inicial = Total Utilizado`}
               </div>
               <div className="text-lg font-black">
-                {total === null
-                  ? "— m"
-                  : totalValid
-                    ? `${total} metros`
-                    : "Valor inválido"}
+                {total === null ? "— m" : totalValid ? `${total} metros` : "Valor inválido"}
               </div>
             </div>
           </div>
@@ -192,9 +219,10 @@ function MetragemPage() {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 px-5 pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur">
         <div className="mx-auto max-w-2xl">
           <button
-            type="submit"
-            form="metragem-form"
-            disabled={!canSubmit}
+            type={canSubmit ? "submit" : "button"}
+            form={canSubmit ? "metragem-form" : undefined}
+            onClick={handleSubmitClick}
+            disabled={submitting}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:shadow-none"
           >
             <Send className="h-5 w-5" />
@@ -202,6 +230,24 @@ function MetragemPage() {
           </button>
         </div>
       </div>
+
+      <AlertDialog open={showIncompleteAlert} onOpenChange={setShowIncompleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-warning" />
+              Formulário incompleto
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Preencha contrato, WO, metragem inicial, metragem final e anexe as duas fotos antes de
+              enviar a evidência.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>Entendi</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
