@@ -1,5 +1,5 @@
 import { Camera, Upload, X, ImageIcon } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function PhotoUpload({
   label,
@@ -7,25 +7,34 @@ export function PhotoUpload({
   onChange,
 }: {
   label: string;
-  value: string | null;
-  onChange: (dataUrl: string | null) => void;
+  value: File | null;
+  onChange: (file: File | null) => void;
 }) {
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!value) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(value);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [value]);
 
   const handleFile = (file: File | undefined) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onChange(reader.result as string);
-    reader.readAsDataURL(file);
+    onChange(file);
   };
 
   return (
     <div>
       <div className="mb-2 text-sm font-semibold text-foreground">{label}</div>
-      {value ? (
+      {preview ? (
         <div className="relative overflow-hidden rounded-xl border border-border bg-muted">
-          <img src={value} alt={label} className="h-48 w-full object-cover" />
+          <img src={preview} alt={label} className="h-48 w-full object-cover" />
           <button
             type="button"
             onClick={() => onChange(null)}

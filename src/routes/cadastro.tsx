@@ -2,49 +2,74 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { requireAdmin } from "@/lib/auth-guards";
+import { useApp } from "@/lib/app-store";
+import { createUserAccount } from "@/lib/admin-actions.server";
 
 export const Route = createFileRoute("/cadastro")({
+  beforeLoad: () => requireAdmin(),
   head: () => ({
     meta: [
       { title: "Cadastro — Estrategic Field" },
-      { name: "description", content: "Cadastro de técnicos da Estrategic." },
+      { name: "description", content: "Cadastro de usuários da Estrategic." },
     ],
   }),
   component: CadastroPage,
 });
 
 function CadastroPage() {
+  const { getAccessToken } = useApp();
   const navigate = useNavigate();
   const [nome, setNome] = useState("");
-  const [matricula, setMatricula] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"tecnico" | "admin">("tecnico");
   const [senha, setSenha] = useState("");
   const [senha2, setSenha2] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (senha !== senha2) {
       toast.error("As senhas não coincidem.");
       return;
     }
+
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      toast.success("Cadastro realizado com sucesso!");
+    try {
+      await createUserAccount({
+        data: {
+          accessToken,
+          email: email.trim(),
+          password: senha,
+          nome: nome.trim(),
+          role,
+        },
+      });
+      toast.success("Usuário criado com sucesso!");
+      navigate({ to: "/admin" });
+    } catch (err) {
+      toast.error((err as Error).message || "Erro ao cadastrar usuário.");
+    } finally {
       setLoading(false);
-      navigate({ to: "/login" });
-    }, 400);
+    }
   };
 
   return (
     <main className="flex min-h-screen flex-col bg-surface px-6 pb-10 pt-16">
       <div className="mx-auto w-full max-w-sm">
         <div className="flex flex-col items-center gap-3">
-          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground font-black text-3xl shadow-lg">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-3xl font-black text-primary-foreground shadow-lg">
             E
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-black tracking-tight">Criar Conta</h1>
-            <p className="text-sm text-muted-foreground">Cadastro do Técnico</p>
+            <h1 className="text-2xl font-black tracking-tight">Criar Login</h1>
+            <p className="text-sm text-muted-foreground">Acesso restrito ao administrador</p>
           </div>
         </div>
 
@@ -64,18 +89,26 @@ function CadastroPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Identificação</label>
+            <label className="mb-1.5 block text-sm font-semibold">E-mail</label>
             <input
-              type="text"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              value={matricula}
-              onChange={(e) => setMatricula(e.target.value)}
-              placeholder="nome.sobrenome"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="usuario@estrategic.com"
               className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               required
             />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Perfil</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as "tecnico" | "admin")}
+              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="tecnico">Técnico</option>
+              <option value="admin">Administrador</option>
+            </select>
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-semibold">Senha</label>
@@ -109,9 +142,8 @@ function CadastroPage() {
           </button>
 
           <p className="pt-2 text-center text-sm text-muted-foreground">
-            Já tem cadastro?{" "}
-            <Link to="/login" className="font-semibold text-primary hover:underline">
-              Faça o login
+            <Link to="/admin" className="font-semibold text-primary hover:underline">
+              Voltar ao painel
             </Link>
           </p>
         </form>

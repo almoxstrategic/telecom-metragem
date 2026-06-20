@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Logo } from "@/components/Logo";
 import { useApp } from "@/lib/app-store";
+import { requireGuest } from "@/lib/auth-guards";
 import { toast } from "sonner";
 import { LogIn } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: () => requireGuest(),
   head: () => ({
     meta: [
       { title: "Entrar — Estrategic Field" },
@@ -18,28 +19,28 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { login } = useApp();
   const navigate = useNavigate();
-  const [matricula, setMatricula] = useState("");
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      if (login(matricula.trim(), senha)) {
-        navigate({ to: "/" });
-      } else {
-        toast.error("Informe matrícula e senha.");
-      }
+    try {
+      const profile = await login(email.trim(), senha);
+      navigate({ to: profile.role === "admin" ? "/admin" : "/" });
+    } catch (err) {
+      toast.error((err as Error).message || "Credenciais inválidas.");
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   return (
     <main className="flex min-h-screen flex-col bg-surface px-6 pb-10 pt-16">
       <div className="mx-auto w-full max-w-sm">
         <div className="flex flex-col items-center gap-3">
-          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground font-black text-3xl shadow-lg">
+          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-3xl font-black text-primary-foreground shadow-lg">
             E
           </div>
           <div className="text-center">
@@ -53,15 +54,15 @@ function LoginPage() {
           className="mt-10 space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm"
         >
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Usuário</label>
+            <label className="mb-1.5 block text-sm font-semibold">E-mail</label>
             <input
-              type="text"
+              type="email"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
-              value={matricula}
-              onChange={(e) => setMatricula(e.target.value)}
-              placeholder="nome.sobrenome"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="usuario@estrategic.com"
               className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               required
             />
@@ -85,15 +86,6 @@ function LoginPage() {
             <LogIn className="h-5 w-5" />
             {loading ? "Entrando..." : "Entrar"}
           </button>
-
-          <div className="flex flex-col items-center gap-2 pt-2 text-sm">
-            <Link to="/alterar" className="font-medium text-primary hover:underline">
-              Esqueci minha senha
-            </Link>
-            <Link to="/cadastro" className="font-medium text-primary hover:underline">
-              Primeiro acesso? Cadastre-se
-            </Link>
-          </div>
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
