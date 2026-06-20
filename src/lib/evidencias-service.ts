@@ -1,6 +1,38 @@
 import { getStoragePublicUrl, getSupabaseClient } from "./supabase";
 import type { Evidencia, EvidenciaInsert } from "./types";
 
+const EVIDENCIAS_BUCKET = "evidencias-fotos";
+
+type PhotoPathsRow = {
+  foto_inicio_path?: string | null;
+  foto_fim_path?: string | null;
+};
+
+export function collectPhotoPaths(rows: PhotoPathsRow[]): string[] {
+  return rows
+    .flatMap((row) => [row.foto_inicio_path, row.foto_fim_path])
+    .filter((path): path is string => typeof path === "string" && path.trim() !== "");
+}
+
+export async function removeEvidencePhotos(paths: string[]): Promise<void> {
+  if (paths.length === 0) return;
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.storage.from(EVIDENCIAS_BUCKET).remove(paths);
+  if (error) throw error;
+}
+
+export async function deleteTecnicoEvidencePhotos(tecnicoId: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("evidencias")
+    .select("foto_inicio_path, foto_fim_path")
+    .eq("tecnico_id", tecnicoId);
+
+  if (error) throw error;
+  await removeEvidencePhotos(collectPhotoPaths(data ?? []));
+}
+
 type DbEvidencia = Evidencia & {
   profiles?: { nome: string } | null;
 };
@@ -103,11 +135,7 @@ export async function deleteEvidenciasWithPhotos(ids: string[]): Promise<void> {
 
   if (fetchError) throw fetchError;
 
-  const paths = (rows ?? []).flatMap((row) => [row.foto_inicio_path, row.foto_fim_path]);
-  if (paths.length > 0) {
-    const { error: storageError } = await supabase.storage.from("evidencias-fotos").remove(paths);
-    if (storageError) throw storageError;
-  }
+  await removeEvidencePhotos(collectPhotoPaths(rows ?? []));
 
   const { error: deleteError } = await supabase.from("evidencias").delete().in("id", ids);
   if (deleteError) throw deleteError;

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Database, KeyRound, UserPlus } from "lucide-react";
+import { Database, KeyRound, UserPlus, Users } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { requireAdmin } from "@/lib/auth-guards";
 
@@ -36,6 +36,20 @@ function AdminHome() {
                 <div className="font-bold text-foreground">Todas as Metragens</div>
                 <div className="text-xs text-muted-foreground">
                   Auditar registros de todos os técnicos
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/tecnicos" className="block">
+            <div className="relative flex h-40 flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="font-bold text-foreground">Gestão de Equipe</div>
+                <div className="text-xs text-muted-foreground">
+                  Listar e excluir técnicos do sistema
                 </div>
               </div>
             </div>

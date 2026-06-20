@@ -117,27 +117,16 @@ create policy "evidencias_fotos_delete_admin"
   on storage.objects for delete
   using (bucket_id = 'evidencias-fotos' and public.is_admin());
 
--- TTL: remove registros e fotos após 30 dias
+-- TTL: remove apenas registros (fotos limpas via Storage API no app ou job externo)
 create or replace function public.purge_evidencias_antigas()
 returns void
 language plpgsql
 security definer
-set search_path = public, storage
+set search_path = public
 as $$
-declare
-  rec record;
 begin
-  for rec in
-    select id, foto_inicio_path, foto_fim_path
-    from public.evidencias
-    where data_registro < now() - interval '30 days'
-  loop
-    delete from storage.objects
-    where bucket_id = 'evidencias-fotos'
-      and name in (rec.foto_inicio_path, rec.foto_fim_path);
-
-    delete from public.evidencias where id = rec.id;
-  end loop;
+  delete from public.evidencias
+  where data_registro < now() - interval '30 days';
 end;
 $$;
 

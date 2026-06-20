@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { requireAdmin } from "@/lib/auth-guards";
@@ -8,8 +8,17 @@ import { resetUserPassword } from "@/lib/admin-actions.server";
 import { PasswordInput } from "@/components/PasswordInput";
 import { isValidLogin } from "@/lib/auth-identificacao";
 
+type AlterarSearch = {
+  login?: string;
+  nome?: string;
+};
+
 export const Route = createFileRoute("/alterar")({
   beforeLoad: () => requireAdmin(),
+  validateSearch: (search: Record<string, unknown>): AlterarSearch => ({
+    login: typeof search.login === "string" ? search.login : undefined,
+    nome: typeof search.nome === "string" ? search.nome : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Alterar Senha — Estrategic Field" },
@@ -20,12 +29,17 @@ export const Route = createFileRoute("/alterar")({
 });
 
 function AlterarPage() {
+  const { login: loginParam, nome: nomeParam } = Route.useSearch();
   const { getAccessToken } = useApp();
   const navigate = useNavigate();
-  const [login, setLogin] = useState("");
+  const [login, setLogin] = useState(loginParam ?? "");
   const [senha, setSenha] = useState("");
   const [senha2, setSenha2] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (loginParam) setLogin(loginParam);
+  }, [loginParam]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +69,7 @@ function AlterarPage() {
         },
       });
       toast.success("Senha atualizada com sucesso!");
-      navigate({ to: "/admin" });
+      navigate({ to: nomeParam ? "/tecnicos" : "/admin" });
     } catch (err) {
       toast.error((err as Error).message || "Erro ao alterar senha.");
     } finally {
@@ -72,7 +86,9 @@ function AlterarPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-black tracking-tight">Alterar Senha</h1>
-            <p className="text-sm text-muted-foreground">Recuperação de acesso (admin)</p>
+            <p className="text-sm text-muted-foreground">
+              {nomeParam ? `Técnico: ${nomeParam}` : "Recuperação de acesso (admin)"}
+            </p>
           </div>
         </div>
 
@@ -90,7 +106,8 @@ function AlterarPage() {
               value={login}
               onChange={(e) => setLogin(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
               placeholder="Ex: joao.silva"
-              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              readOnly={!!loginParam}
+              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:cursor-default read-only:bg-muted/40"
               required
             />
           </div>
@@ -112,8 +129,11 @@ function AlterarPage() {
           </button>
 
           <p className="pt-2 text-center text-sm text-muted-foreground">
-            <Link to="/admin" className="font-semibold text-primary hover:underline">
-              Voltar ao painel
+            <Link
+              to={nomeParam ? "/tecnicos" : "/admin"}
+              className="font-semibold text-primary hover:underline"
+            >
+              {nomeParam ? "Voltar à Gestão de Equipe" : "Voltar ao painel"}
             </Link>
           </p>
         </form>

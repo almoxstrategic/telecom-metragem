@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
+import { Route as TecnicosRouteImport } from './routes/tecnicos'
 import { Route as MetragemRouteImport } from './routes/metragem'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
@@ -21,6 +22,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TecnicosRoute = TecnicosRouteImport.update({
+  id: '/tecnicos',
+  path: '/tecnicos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MetragemRoute = MetragemRouteImport.update({
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
+  '/tecnicos': typeof TecnicosRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
+  '/tecnicos': typeof TecnicosRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/metragem': typeof MetragemRoute
+  '/tecnicos': typeof TecnicosRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/metragem'
+    | '/tecnicos'
     | '/todos'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/metragem'
+    | '/tecnicos'
     | '/todos'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/metragem'
+    | '/tecnicos'
     | '/todos'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   MetragemRoute: typeof MetragemRoute
+  TecnicosRoute: typeof TecnicosRoute
   TodosRoute: typeof TodosRoute
 }
 
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/todos'
       fullPath: '/todos'
       preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tecnicos': {
+      id: '/tecnicos'
+      path: '/tecnicos'
+      fullPath: '/tecnicos'
+      preLoaderRoute: typeof TecnicosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/metragem': {
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   MetragemRoute: MetragemRoute,
+  TecnicosRoute: TecnicosRoute,
   TodosRoute: TodosRoute,
 }
 export const routeTree = rootRouteImport
