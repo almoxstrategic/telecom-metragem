@@ -43,18 +43,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const supabase = getSupabaseClient();
-
-    supabase.auth.getSession().then(({ data }) => {
-      hydrateSession(data.session).finally(() => setLoading(false));
-    });
+    let active = true;
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      hydrateSession(nextSession);
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (!active) return;
+      void hydrateSession(nextSession);
+      if (event === "INITIAL_SESSION") {
+        setLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [hydrateSession]);
 
   const login = useCallback(async (identificacao: string, password: string) => {

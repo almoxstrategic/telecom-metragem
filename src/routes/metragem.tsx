@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Send, CheckCircle2, Ruler, AlertCircle } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PhotoUpload } from "@/components/PhotoUpload";
@@ -9,6 +9,11 @@ import {
   insertEvidencia,
   uploadEvidencePhoto,
 } from "@/lib/evidencias-service";
+import {
+  clearMetragemDraft,
+  loadMetragemDraft,
+  saveMetragemDraft,
+} from "@/lib/metragem-draft";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,14 +38,24 @@ export const Route = createFileRoute("/metragem")({
 
 function MetragemPage() {
   const { user } = useApp();
-  const [contrato, setContrato] = useState("");
-  const [wo, setWo] = useState("");
-  const [metInicial, setMetInicial] = useState("");
-  const [metFinal, setMetFinal] = useState("");
+  const initialDraft = useMemo(() => loadMetragemDraft(), []);
+  const [contrato, setContrato] = useState(initialDraft?.contrato ?? "");
+  const [wo, setWo] = useState(initialDraft?.wo ?? "");
+  const [metInicial, setMetInicial] = useState(initialDraft?.metInicial ?? "");
+  const [metFinal, setMetFinal] = useState(initialDraft?.metFinal ?? "");
   const [fotoInicio, setFotoInicio] = useState<File | null>(null);
   const [fotoFim, setFotoFim] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showIncompleteAlert, setShowIncompleteAlert] = useState(false);
+
+  useEffect(() => {
+    saveMetragemDraft({
+      contrato,
+      wo,
+      metInicial,
+      metFinal,
+    });
+  }, [contrato, wo, metInicial, metFinal]);
 
   const mi = parseFloat(metInicial);
   const mf = parseFloat(metFinal);
@@ -67,6 +82,7 @@ function MetragemPage() {
     setMetFinal("");
     setFotoInicio(null);
     setFotoFim(null);
+    clearMetragemDraft();
   };
 
   const onSubmit = async (e: React.FormEvent) => {
